@@ -1,4 +1,5 @@
-from django.db import models, transaction
+from sre_constants import SUCCESS
+from django.db import models, transaction, IntegrityError
 from django.db.models import F
 
 
@@ -45,3 +46,16 @@ class ChargeRequest(models.Model):
     amount = models.PositiveBigIntegerField()
     status = models.CharField(
         max_length=1, choices=STATUS_CHOICES, default=REQUESTED)
+
+    def charge(self):
+        with transaction.atomic():
+            self.seller.credit = F('credit') - self.amount
+            self.customer.charge = F('charge') + self.amount
+            self.seller.save()
+            self.customer.save()
+            if self.seller.credit < 0:
+                self.status = ChargeRequest.FAILED
+                self.save()
+                raise IntegrityError('seller credit lower than amount')
+            self.status = ChargeRequest.SUCCESSFUL
+            self.save()
