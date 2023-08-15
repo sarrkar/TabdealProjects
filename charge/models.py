@@ -4,6 +4,10 @@ from django.db.models import F
 
 
 class Seller(models.Model):
+
+    def __str__(self) -> str:
+        return self.name
+
     name = models.CharField(max_length=50)
     credit = models.BigIntegerField(default=0)
 
@@ -11,6 +15,10 @@ class Seller(models.Model):
 class Customer(models.Model):
     class Meta:
         indexes = [models.Index(fields=['phone',])]
+    
+    def __str__(self) -> str:
+        return f'{self.first_name} {self.last_name}'
+
     first_name = models.CharField(max_length=50)
     last_name = models.CharField(max_length=50)
     phone = models.CharField(max_length=11, unique=True)
@@ -18,6 +26,10 @@ class Customer(models.Model):
 
 
 class CreditRequest(models.Model):
+
+    def __str__(self) -> str:
+        return f'{self.seller} : {self.amount}'
+
     seller = models.ForeignKey(Seller, on_delete=models.CASCADE)
     amount = models.PositiveBigIntegerField()
 
@@ -40,6 +52,9 @@ class ChargeRequest(models.Model):
         (FAILED, 'FAILED'),
     ]
 
+    def __str__(self) -> str:
+        return f'{self.seller} - {self.customer} : {self.amount} - {self.status}'
+
     seller = models.ForeignKey(Seller, null=True, on_delete=models.SET_NULL)
     customer = models.ForeignKey(
         Customer, null=True, on_delete=models.SET_NULL)
@@ -49,10 +64,13 @@ class ChargeRequest(models.Model):
 
     def charge(self):
         with transaction.atomic():
+            if self.status != ChargeRequest.REQUESTED:
+                raise IntegrityError('cannot change status')
             self.seller.credit = F('credit') - self.amount
             self.customer.charge = F('charge') + self.amount
             self.seller.save()
             self.customer.save()
+            self.seller.refresh_from_db()
             if self.seller.credit < 0:
                 self.status = ChargeRequest.FAILED
                 self.save()

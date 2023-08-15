@@ -20,9 +20,14 @@ class CustomerSerializer(serializers.ModelSerializer):
         model = Customer
         fields = ['id', 'phone', 'first_name', 'last_name', 'charge']
 
-class CreditRequestSerializer(serializers.ModelSerializer):
+class CreditRequestViewSerializer(serializers.ModelSerializer):
     seller_name = serializers.CharField(source='seller.name')
 
+    class Meta:
+        model = CreditRequest
+        fields = ['id', 'seller_name', 'amount']
+
+class CreditRequestCreateSerializer(serializers.ModelSerializer):
     def validate(self, data):
         if data['amount'] < 0:
             raise serializers.ValidationError({'amount': 'amount cannot be negative'})
@@ -30,17 +35,26 @@ class CreditRequestSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CreditRequest
-        fields = ['id', 'seller_name', 'amount']
+        fields = ['id', 'seller', 'amount']
 
-class ChargeRequestSerializer(serializers.ModelSerializer):
+class ChargeRequestViewSerializer(serializers.ModelSerializer):
     seller_name = serializers.CharField(source='seller.name')
     customer_phone = serializers.CharField(source='customer.phone')
-
-    def validate(self, data):
-        if data['amount'] < 0:
-            raise serializers.ValidationError({'amount': 'amount cannot be negative'})
-        return data
 
     class Meta:
         model = ChargeRequest
         fields = ['id', 'seller_name', 'customer_phone', 'amount', 'status']
+
+class ChargeRequestCreateSerializer(serializers.ModelSerializer):
+    customer_phone = serializers.CharField(source='customer.phone', read_only=True)
+
+    def validate(self, data):
+        if data['amount'] < 0:
+            raise serializers.ValidationError({'amount': 'amount cannot be negative'})
+        if data['seller'] is None:
+            raise serializers.ValidationError({'seller': 'seller cannot be empty'})
+        return data
+
+    class Meta:
+        model = ChargeRequest
+        fields = ['id', 'seller', 'customer', 'customer_phone', 'amount']
