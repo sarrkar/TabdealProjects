@@ -28,14 +28,19 @@ class CreditRequest(models.Model):
 
 
 class ChargeRequest(models.Model):
+    REQUESTED = 'R'
+    SUCCESSFUL = 'S'
+    FAILED = 'F'
 
     STATUS_CHOICES = [
-        ('R', 'REQUESTED'),
-        ('S', 'SUCCESSFUL'),
-        ('F', 'FAILED'),
+        (REQUESTED, 'REQUESTED'),
+        (SUCCESSFUL, 'SUCCESSFUL'),
+        (FAILED, 'FAILED'),
     ]
 
     seller = models.ForeignKey(Seller, null=True, on_delete=models.SET_NULL)
-    customer = models.ForeignKey(Customer, null=True, on_delete=models.SET_NULL)
+    customer = models.ForeignKey(
+        Customer, null=True, on_delete=models.SET_NULL)
     amount = models.PositiveBigIntegerField()
-    status = models.CharField(max_length=1, choices=STATUS_CHOICES)
+    status = models.CharField(
+        max_length=1, choices=STATUS_CHOICES, default=REQUESTED)
