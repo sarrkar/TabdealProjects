@@ -4,7 +4,7 @@ from django.db.models import F
 
 class Seller(models.Model):
     name = models.CharField(max_length=50)
-    credit = models.BigIntegerField()
+    credit = models.BigIntegerField(default=0)
 
 
 class Customer(models.Model):
@@ -13,6 +13,7 @@ class Customer(models.Model):
     first_name = models.CharField(max_length=50)
     last_name = models.CharField(max_length=50)
     phone = models.CharField(max_length=11, unique=True)
+    charge = models.PositiveBigIntegerField(default=0)
 
 
 class CreditRequest(models.Model):
