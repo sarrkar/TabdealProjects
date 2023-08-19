@@ -1,5 +1,6 @@
 from rest_framework import generics, mixins
 from rest_framework.response import Response
+from django.db import IntegrityError
 from charge.models import ChargeRequest, CreditRequest, Customer, Seller
 from charge.serializers import ChargeRequestCreateSerializer, ChargeRequestViewSerializer, CreditRequestCreateSerializer, CreditRequestViewSerializer, CustomerSerializer, SellerSerializer
 
@@ -61,6 +62,9 @@ class ChargeRequestCharge(generics.GenericAPIView):
 
     def get(self, request, *args, **kwargs):
         instance = self.get_object()
-        instance.charge()
+        try:
+            instance.charge()
+        except IntegrityError as e:
+            return Response({"error": str(e)}, status=500)
         serializer = self.get_serializer(instance)
         return Response(serializer.data)

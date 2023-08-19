@@ -63,17 +63,20 @@ class ChargeRequest(models.Model):
         max_length=1, choices=STATUS_CHOICES, default=REQUESTED)
 
     def charge(self):
-        with transaction.atomic():
-            if self.status != ChargeRequest.REQUESTED:
-                raise IntegrityError('cannot change status')
-            self.seller.credit = F('credit') - self.amount
-            self.customer.charge = F('charge') + self.amount
-            self.seller.save()
-            self.customer.save()
-            self.seller.refresh_from_db()
-            if self.seller.credit < 0:
-                self.status = ChargeRequest.FAILED
+        if self.status != ChargeRequest.REQUESTED:
+            raise IntegrityError('cannot change status')
+        try:
+            with transaction.atomic():
+                self.seller.credit = F('credit') - self.amount
+                self.seller.save()
+                self.customer.charge = F('charge') + self.amount
+                self.customer.save()
+                self.seller.refresh_from_db()
+                if self.seller.credit < 0:
+                    raise IntegrityError('seller credit lower than amount')
+                self.status = ChargeRequest.SUCCESSFUL
                 self.save()
-                raise IntegrityError('seller credit lower than amount')
-            self.status = ChargeRequest.SUCCESSFUL
+        except IntegrityError:
+            self.status = ChargeRequest.FAILED
             self.save()
+            raise IntegrityError('seller credit lower than amount')

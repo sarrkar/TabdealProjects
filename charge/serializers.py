@@ -18,7 +18,7 @@ class CustomerSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Customer
-        fields = ['id', 'phone', 'first_name', 'last_name', 'charge']
+        fields = ['phone', 'first_name', 'last_name', 'charge']
 
 class CreditRequestViewSerializer(serializers.ModelSerializer):
     seller_name = serializers.CharField(source='seller.name')
@@ -57,4 +57,4 @@ class ChargeRequestCreateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ChargeRequest
-        fields = ['id', 'seller', 'customer', 'customer_phone', 'amount']
+        fields = ['seller', 'customer', 'customer_phone', 'amount']
