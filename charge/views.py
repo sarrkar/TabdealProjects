@@ -1,26 +1,26 @@
-from rest_framework import generics, mixins
+from rest_framework import generics, mixins, status
 from rest_framework.response import Response
 from django.db import IntegrityError
 from charge.models import ChargeRequest, CreditRequest, Customer, Seller
 from charge.serializers import ChargeRequestCreateSerializer, ChargeRequestViewSerializer, CreditRequestCreateSerializer, CreditRequestViewSerializer, CustomerSerializer, SellerSerializer
 
 
-class SellerList(generics.ListCreateAPIView):
+class SellerList(generics.ListAPIView):
     queryset = Seller.objects.all()
     serializer_class = SellerSerializer
 
 
-class SellerDetail(generics.RetrieveUpdateDestroyAPIView):
+class SellerDetail(generics.RetrieveAPIView):
     queryset = Seller.objects.all()
     serializer_class = SellerSerializer
 
 
-class CustomerList(generics.ListCreateAPIView):
+class CustomerList(generics.ListAPIView):
     queryset = Customer.objects.all()
     serializer_class = CustomerSerializer
 
 
-class CustomerDetail(generics.RetrieveUpdateDestroyAPIView):
+class CustomerDetail(generics.RetrieveAPIView):
     queryset = Customer.objects.all()
     serializer_class = CustomerSerializer
 
@@ -36,11 +36,12 @@ class CreditRequestList(generics.ListCreateAPIView):
 
     def get(self, request, *args, **kwargs):
         CreditRequestList.serializer_class = CreditRequestViewSerializer
-        return self.list(request, *args, **kwargs)
+        return super().get(request, *args, **kwargs)
 
     def post(self, request, *args, **kwargs):
         CreditRequestList.serializer_class = CreditRequestCreateSerializer
-        return self.create(request, *args, **kwargs)
+        return super().post(request, *args, **kwargs)
+
 
 class ChargeRequestList(generics.ListCreateAPIView):
     queryset = ChargeRequest.objects.all()
@@ -48,13 +49,14 @@ class ChargeRequestList(generics.ListCreateAPIView):
 
     def get(self, request, *args, **kwargs):
         ChargeRequestList.serializer_class = ChargeRequestViewSerializer
-        return self.list(request, *args, **kwargs)
+        return super().get(request, *args, **kwargs)
 
     def post(self, request, *args, **kwargs):
         ChargeRequestList.serializer_class = ChargeRequestCreateSerializer
         customer = Customer.objects.get(phone=request.data['customer_phone'])
         request.data['customer'] = customer.pk
-        return self.create(request, *args, **kwargs)
+        return super().post(request, *args, **kwargs)
+
 
 class ChargeRequestCharge(generics.GenericAPIView):
     queryset = ChargeRequest.objects.all()
@@ -65,6 +67,6 @@ class ChargeRequestCharge(generics.GenericAPIView):
         try:
             instance.charge()
         except IntegrityError as e:
-            return Response({"error": str(e)}, status=500)
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         serializer = self.get_serializer(instance)
         return Response(serializer.data)

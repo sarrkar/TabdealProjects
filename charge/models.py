@@ -15,7 +15,7 @@ class Seller(models.Model):
 class Customer(models.Model):
     class Meta:
         indexes = [models.Index(fields=['phone',])]
-    
+
     def __str__(self) -> str:
         return f'{self.first_name} {self.last_name}'
 
