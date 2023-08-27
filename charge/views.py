@@ -53,7 +53,8 @@ class ChargeRequestList(generics.ListCreateAPIView):
 
     def post(self, request, *args, **kwargs):
         ChargeRequestList.serializer_class = ChargeRequestCreateSerializer
-        customer, created = Customer.objects.get_or_create(phone=request.data['customer_phone'])
+        customer, created = Customer.objects.get_or_create(
+            phone=request.data['customer_phone'])
         request.data['customer'] = customer.pk
         try:
             return super().post(request, *args, **kwargs)
