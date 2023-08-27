@@ -67,10 +67,10 @@ class ChargeRequest(models.Model):
             raise IntegrityError('cannot change status')
         try:
             self.charge()
-            super(CreditRequest, self).save(*args, **kwargs)
+            super(ChargeRequest, self).save(*args, **kwargs)
         except IntegrityError:
             self.status = ChargeRequest.FAILED
-            super(CreditRequest, self).save(*args, **kwargs)
+            super(ChargeRequest, self).save(*args, **kwargs)
             raise IntegrityError('seller credit lower than amount')
 
     def charge(self):
