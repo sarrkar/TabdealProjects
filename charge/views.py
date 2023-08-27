@@ -53,20 +53,9 @@ class ChargeRequestList(generics.ListCreateAPIView):
 
     def post(self, request, *args, **kwargs):
         ChargeRequestList.serializer_class = ChargeRequestCreateSerializer
-        customer = Customer.objects.get(phone=request.data['customer_phone'])
+        customer, created = Customer.objects.get_or_create(phone=request.data['customer_phone'])
         request.data['customer'] = customer.pk
-        return super().post(request, *args, **kwargs)
-
-
-class ChargeRequestCharge(generics.GenericAPIView):
-    queryset = ChargeRequest.objects.all()
-    serializer_class = ChargeRequestViewSerializer
-
-    def get(self, request, *args, **kwargs):
-        instance = self.get_object()
         try:
-            instance.charge()
+            return super().post(request, *args, **kwargs)
         except IntegrityError as e:
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-        serializer = self.get_serializer(instance)
-        return Response(serializer.data)
